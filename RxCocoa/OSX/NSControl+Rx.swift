@@ -3,7 +3,7 @@
 //  RxCocoa
 //
 //  Created by Krunoslav Zaher on 5/31/15.
-//  Copyright (c) 2015 Krunoslav Zaher. All rights reserved.
+//  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
 import Foundation
@@ -16,15 +16,15 @@ var rx_value_key: UInt8 = 0
 var rx_control_events_key: UInt8 = 0
 
 extension NSControl {
-    
+
     /**
     Reactive wrapper for control event.
     */
-    public var rx_controlEvents: ControlEvent<Void> {
+    public var rx_controlEvent: ControlEvent<Void> {
         MainScheduler.ensureExecutingOnScheduler()
 
         let source = rx_lazyInstanceObservable(&rx_control_events_key) { () -> Observable<Void> in
-            create { [weak self] observer in
+            Observable.create { [weak self] observer in
                 MainScheduler.ensureExecutingOnScheduler()
 
                 guard let control = self else {
@@ -44,52 +44,44 @@ extension NSControl {
     }
 
     /**
-    Helper to make sure that `Observable` returned from `createCachedObservable` is only created once.
-    This is important because on OSX there is only one `target` and `action` properties on `NSControl`.
+     You might be wondering why the ugly `as!` casts etc, well, for some reason if
+     Swift compiler knows C is UIControl type and optimizations are turned on, it will crash.
     */
-    func rx_lazyInstanceObservable<T: AnyObject>(key: UnsafePointer<Void>, createCachedObservable: () -> T) -> T {
-        if let value = objc_getAssociatedObject(self, key) {
-            return value as! T
-        }
-
-        let observable = createCachedObservable()
-
-        objc_setAssociatedObject(self, key, observable, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-
-        return observable
-    }
-
-    func rx_value<T>(getter getter: () -> T, setter: T -> Void) -> ControlProperty<T> {
+    static func rx_value<C: AnyObject, T: Equatable>(control: C, getter: (C) -> T, setter: (C, T) -> Void) -> ControlProperty<T> {
         MainScheduler.ensureExecutingOnScheduler()
 
-        let source = rx_lazyInstanceObservable(&rx_value_key) { () -> Observable<T> in
-            return create { [weak self] observer in
-                guard let control = self else {
+        let source = (control as! NSObject).rx_lazyInstanceObservable(&rx_value_key) { () -> Observable<T> in
+            return Observable.create { [weak weakControl = control] (observer: AnyObserver<T>) in
+                guard let control = weakControl else {
                     observer.on(.Completed)
                     return NopDisposable.instance
                 }
 
-                observer.on(.Next(getter()))
+                observer.on(.Next(getter(control)))
 
-                let observer = ControlTarget(control: control) { control in
-                    observer.on(.Next(getter()))
+                let observer = ControlTarget(control: control as! NSControl) { _ in
+                    if let control = weakControl {
+                        observer.on(.Next(getter(control)))
+                    }
                 }
                 
                 return observer
-            }.takeUntil(self.rx_deallocated)
+            }
+            .distinctUntilChanged()
+            .takeUntil((control as! NSObject).rx_deallocated)
         }
 
+        let bindingObserver = UIBindingObserver(UIElement: control, binding: setter)
 
-        return ControlProperty(values: source, valueSink: AnyObserver { event in
-            switch event {
-            case .Next(let value):
-                setter(value)
-            case .Error(let error):
-                bindingErrorToInterface(error)
-            case .Completed:
-                break
-            }
-        })
+        return ControlProperty(values: source, valueSink: bindingObserver)
     }
-    
+
+    /**
+     Bindable sink for `enabled` property.
+    */
+    public var rx_enabled: AnyObserver<Bool> {
+        return UIBindingObserver(UIElement: self) { (owner, value) in
+            owner.enabled = value
+        }.asObserver()
+    }
 }

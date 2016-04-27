@@ -3,6 +3,276 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.4](https://github.com/ReactiveX/RxSwift/releases/tag/2.4)
+
+#### Features
+
+* adds `Driver.drive` with `Variable` parameter.
+* exposes `RxSearchBarDelegateProxy`
+* adds `rx_cancelButtonClicked` to `UISearchBar`.
+* adds `rx_searchButtonClicked` to `UISearchBar`.
+* adds `UISearchController` extensions:
+  * `rx_didDismiss`
+  * `rx_didPresent`
+  * `rx_present`
+  * `rx_willDismiss`
+  * `rx_willPresent`
+
+
+#### Anomalies
+
+* Fixes anomaly with `multicast` disposing subscription.
+* Small grammar fixes in code.
+* Fixes in documentation.
+
+## [2.3.1](https://github.com/ReactiveX/RxSwift/releases/tag/2.3.1)
+
+#### Features
+
+* Xcode 7.3 / Swift 2.2 support
+
+## [2.3.0](https://github.com/ReactiveX/RxSwift/releases/tag/2.3.0)
+
+#### Features
+
+* Adds `rx_badgeValue` to `UITabBarItem`.
+* Adds `rx_progress` to `UIProgresView`.
+* Adds `rx_selectedScopeButtonIndex` to `UISearchBar`.
+* Adds `asyncInstance` to `MainScheduler`.
+* Makes `name` parmeter optional for `rx_notification` extension.
+* Adds `UnitTests.md`.
+* Adds `Tips.md`.
+* Updates playground inline documentation with running instructions.
+* Synchronizes copy of `RxDataSources` source files inside example project to `0.6` release.
+
+#### Anomalies
+
+* Fixes anomaly with synchronization in disposable setter of `SingleAssignmentDisposable`.
+* Improves `DelegateProxy` memory management.
+* Fixes anomaly during two way binding of `UITextView` text value.
+* Improves `single` operator so it handles reentrancy better.
+
+## [2.2.0](https://github.com/ReactiveX/RxSwift/releases/tag/2.2.0)
+
+#### Public Interface anomalies
+
+* Fixes problem with `timer` operator. Changes return type from `Observable<Int64>` to `Observable<T>`. This could potentially cause code breakage, but it was an API anomaly.
+* Curried functions were marked deprecated so they were replaced in `UITableView` and `UICollectionView` extensions with equivalent lambdas. This shouldn't break anyone's code, but it is a change in public interface.
+
+This is example of those changes:
+
+```swift
+- public func rx_itemsWithCellFactory<S : SequenceType, O : ObservableType where O.E == S>
+      (source: O)
+      (cellFactory: (UITableView, Int, S.Generator.Element) -> UITableViewCell) -> Disposable
++ public func rx_itemsWithCellFactory<S : SequenceType, O : ObservableType where O.E == S>
+      (source: O)
+      -> (cellFactory: (UITableView, Int, S.Generator.Element) -> UITableViewCell) -> Disposable
+```
+
+* Fixes anomaly in `CLLocationManager` extensions
+
+```swift
+-    public var rx_didFinishDeferredUpdatesWithError: RxSwift.Observable<NSError> { get }
++    public var rx_didFinishDeferredUpdatesWithError: RxSwift.Observable<NSError?> { get }
+```
+
+#### Features
+
+* Adds `UIBindingObserver`.
+* Adds `doOnNext` convenience operator (also added to `Driver`).
+* Adds `doOnError` convenience operator.
+* Adds `doOnCompleted` convenience operator (also added to `Driver`).
+* Adds `skip`, `startWith` to `Driver`.
+* Adds `rx_active` extension to `NSLayoutConstraint`.
+* Adds `rx_refreshing` extension to `UIRefreshControl`.
+* Adds `interval` and `timer` to `Driver`.
+* Adds `rx_itemAccessoryButtonTapped` to `UITableView` extensions.
+* Adds `rx_networkActivityIndicatorVisible` to `UIApplication`.
+* Adds `rx_selected` to `UIControl`.
+
+#### Anomalies
+
+* Fixes anomaly with registering multiple observers to `UIBarButtonItem`.
+* Fixes anomaly with blocking operators possibly over-stopping the `RunLoop`.
+
+## [2.1.0](https://github.com/ReactiveX/RxSwift/releases/tag/2.1.0)
+
+#### Features
+
+* Adds `UIImagePickerController` delegate wrappers.
+* Adds `SectionedViewDataSourceType` that enables third party data sources to use existing `rx_modelSelected`/`rx_modelDeselected` wrappers.
+* Adds `rx_modelDeselected` to `UITableView`
+* Adds `rx_itemDeselected` to `UITableView`
+* Adds `rx_modelDeselected` to `UICollectionView`
+* Adds `rx_itemDeselected` to `UICollectionView`
+* Adds `rx_state` to `NSButton`
+* Adds `rx_enabled` to `NSControl`
+* Adds `UIImagePickerController` usage example to Example app.
+
+#### Anomalies
+
+* Removes usage of `OSSpinLock`s from all `Darwin` platforms because of problems with inversion of priority on iOS. [Original thread on swift mailing list is here](https://lists.swift.org/pipermail/swift-dev/Week-of-Mon-20151214/000321.html)
+* Reduces verbose output from `RxCocoa` project in debug mode. `TRACE_RESOURCES` is now also treated as a verbosity level setting. It is possible to get old output by using `TRACE_RESOURCES` with verbosity level `>= 2`. [#397](https://github.com/ReactiveX/RxSwift/issues/397)
+* Fixes anomaly with logging of HTTP body of requests in `RxCocoa` project.
+
+## [2.0.0](https://github.com/ReactiveX/RxSwift/releases/tag/2.0.0)
+
+#### Features
+
+* Changes package names to `io.rx.[library]`
+* Packages data sources from `RxDataSourceStarterKit` into it's own repository [RxDataSources](https://github.com/RxSwiftCommunity/RxDataSources) under `RxSwiftCommunity`.
+* Removes deprecated APIs.
+
+#### Anomalies
+
+* Replaces hacky code that solved anomaly caused by interaction between autocorrect and text controls notification mechanism with proper solution. #333
+
+## [2.0.0-rc.0](https://github.com/ReactiveX/RxSwift/releases/tag/2.0.0-rc.0)
+
+#### Features
+
+* Adds generic `public func rx_sentMessage(selector: Selector) -> Observable<[AnyObject]>` that enables observing of messages
+ sent to any object. (This is enabled if DISABLE_SWIZZLING isn't set).
+  * use cases like `cell.rx_sentMessage("prepareForReuse")` are now supported.
+* Linux support (proof of concept, but single threaded mode works)
+  * more info in [Documentation/Linux.md](https://github.com/ReactiveX/RxSwift/blob/master/Documentation/Linux.md)
+* Initial support for `Swift Package Manager`
+  * works on `Linux` (`RxSwift`, `RxBlocking`, `RxTests`)
+  * doesn't work on OSX because it can't compile `RxCocoa` and `RxTests` (because of inclusion of `XCTest` extensions), but OSX has two other package managers and manual method.
+  * Project content is linked to `Sources` automagically using custom tool
+  * more info in [Documentation/Linux.md](https://github.com/ReactiveX/RxSwift/blob/master/Documentation/Linux.md)
+* Adds `VirtualTimeScheduler` to `RxSwift`
+* Adds `HistoricalScheduler` to `RxSwift`
+* Improves performance of virtual schedulers using priority queue.
+* Adds new `RxTests` library to enable testing of custom Rx operators.
+This library contains everything needed to write unit tests in the following way:
+```swift
+func testMap() {
+    let scheduler = TestScheduler(initialClock: 0)
+
+    let xs = scheduler.createHotObservable([
+        next(150, 1),
+        next(210, 0),
+        next(220, 1),
+        next(230, 2),
+        next(240, 4),
+        completed(300)
+        ])
+
+    let res = scheduler.start { xs.map { $0 * 2 } }
+
+    let correctEvents = [
+        next(210, 0 * 2),
+        next(220, 1 * 2),
+        next(230, 2 * 2),
+        next(240, 4 * 2),
+        completed(300)
+    ]
+
+    let correctSubscriptions = [
+        Subscription(200, 300)
+    ]
+
+    XCTAssertEqual(res.events, correctEvents)
+    XCTAssertEqual(xs.subscriptions, correctSubscriptions)
+}
+```
+
+* Adds test project for `RxExample-iOS` that demonstrates how to easily write marble tests using `RxTests` project.
+```swift
+let (
+    usernameEvents,
+    passwordEvents,
+    repeatedPasswordEvents,
+    loginTapEvents,
+
+    expectedValidatedUsernameEvents,
+    expectedSignupEnabledEvents
+) = (
+    scheduler.parseEventsAndTimes("e---u1----u2-----u3-----------------", values: stringValues).first!,
+    scheduler.parseEventsAndTimes("e----------------------p1-----------", values: stringValues).first!,
+    scheduler.parseEventsAndTimes("e---------------------------p2---p1-", values: stringValues).first!,
+    scheduler.parseEventsAndTimes("------------------------------------", values: events).first!,
+
+    scheduler.parseEventsAndTimes("e---v--f--v--f---v--o----------------", values: validations).first!,
+    scheduler.parseEventsAndTimes("f--------------------------------t---", values: booleans).first!
+)
+```
+
+* Adds example app for GitHub signup example that shows the same example written with and without `Driver`.
+* Documents idea behind units and `Driver` in `Units.md`.
+* Example of table view with editing is polished to use more functional approach.
+* Adds `deferred` to `Driver` unit.
+* Removes implicitly unwrapped optionals from `CLLocationManager` extensions.
+* Removes implicitly unwrapped optionals from `NSURLSession` extensions.
+* Polishes the `debug` operator format.
+* Adds optional `cellType` parameter to Table/Collection view `rx_itemsWithCellIdentifier` method.
+* Polish for calculator example in `RxExample` app.
+* Documents and adds unit tests for tail recursive optimizations of `concat` operator.
+* Moves `Event` equality operator to `RxTests` project.
+* Adds `seealso` references to `reactivex.io`.
+* Polishes headers in source files and adds tests to enforce standard header format.
+* Adds `driveOnScheduler` to enable scheduler mocking for `Driver` during unit tests.
+* Adds assertions to `drive*` family of functions that makes sure they are always called from main thread.
+* Refactoring and polishing of internal ObjC runtime interception architecture.
+
+#### Deprecated
+
+* Changes `ConnectableObservable`, generic argument is now type of elements in observable sequence and not type of underlying subject. (BREAKING CHANGE)
+* Removes `RxBox` and `RxMutable` box from public interface. (BREAKING CHANGE)
+* `SchedulerType` now isn't parametrized on `Time` and `TimeInterval`.
+* Deprecates `Variable` implementing `ObservableType` in favor of `asObservable()`.
+  * Now variable also sends `.Completed` to observable sequence returned from `asObservable` when deallocated.
+    If you were (mis)using variable to return single value
+    ```
+    Variable(1).map { x in ... }
+    ```
+    ... you can just use `just` operator
+    ```
+    Observable.just(1).map { x in ... }
+    ```
+* Deprecates free functions in favor of `Observable` factory methods, and deprecates versions of operators with hidden external parameters (scheduler, count) in favor of ones with explicit parameter names.
+    E.g.
+
+    `Observable.just(1)` instead of `just(1)`
+
+    `Observable.empty()` instead of `empty()`
+
+    `Observable.error()` instead of `failWith()`
+
+    `Observable.of(1, 2, 3)` instead of `sequenceOf(1, 2, 3)`
+
+    `.debounce(0.2, scheduler: MainScheduler.sharedInstance)` instead of `.debounce(0.2, MainScheduler.sharedInstance)`
+
+    `Observable.range(start:0, count: 10)` instead of `range(0, 10)`
+
+    `Observable.generate(initialState: 0, condition: { $0 < 10 }) { $0 + 1 }` instead of `generate(0, condition: { $0 < 10 }) { $0 + 1 }`
+
+    `Observable<Int>.interval(1, scheduler: MainScheduler.sharedInstance)` instead of `interval(1, MainScheduler.sharedInstance)`
+
+    ...
+
+    If you want to continue using free functions form, you can define your free function aliases for `Observable` factory methods (basically copy deprecated methods).
+* Deprecates `UIAlertView` extensions.
+  * These extensions could be stored locally if needed.
+* Deprecates `UIActionSheet` extensions.
+  * These extensions could be stored locally if needed.
+* Deprecates `rx_controlEvents` in favor of `rx_controlEvent`.
+* Deprecates `MainScheduler.sharedInstance` in favor of `MainScheduler.instance`
+* Deprecates `ConcurrentMainScheduler.sharedInstance` in favor of `ConcurrentMainScheduler.instance`
+* Deprecates factory methods from `Drive` in favor of `Driver` factory methods.
+* Deprecates `sampleLatest` in favor of `withLatestFrom`.
+* Deprecates `ScopedDisposable` and `scopedDispose()` in favor of `DisposeBag`.
+
+#### Fixed
+
+* Improves and documents resource leak code in `RxExample`.
+* Replaces `unowned` reference with `weak` references in `RxCocoa` project.
+* Fixes `debug` operator not using `__FILE__` and `__LINE__` properly.
+* Fixes anomaly with `timeout` operator.
+* Fixes problem with spell-checker and `UIText*` losing focus.
+
 ## [2.0.0-beta.4](https://github.com/ReactiveX/RxSwift/releases/tag/2.0.0-beta.4)
 
 #### Updated

@@ -1,3 +1,12 @@
+/*:
+> # IMPORTANT: To use `Rx.playground`, please:
+
+1. Open `Rx.xcworkspace`
+2. Build `RxSwift-OSX` scheme
+3. And then open `Rx` playground in `Rx.xcworkspace` tree view.
+4. Choose `View > Show Debug Area`
+*/
+
 //: [<< Previous](@previous) - [Index](Index)
 
 import RxSwift
@@ -93,10 +102,10 @@ example("BehaviorSubject") {
 example("Variable") {
     let disposeBag = DisposeBag()
     let variable = Variable("z")
-    writeSequenceToConsole("1", sequence: variable).addDisposableTo(disposeBag)
+    writeSequenceToConsole("1", sequence: variable.asObservable()).addDisposableTo(disposeBag)
     variable.value = "a"
     variable.value = "b"
-    writeSequenceToConsole("2", sequence: variable).addDisposableTo(disposeBag)
+    writeSequenceToConsole("2", sequence: variable.asObservable()).addDisposableTo(disposeBag)
     variable.value = "c"
     variable.value = "d"
 }

@@ -11,10 +11,30 @@ import Foundation
     import RxSwift
 #endif
 
-class RunLoopLock : NSObject {
+typealias AtomicInt = Int32
+
+#if os(Linux)
+  func AtomicIncrement(increment: UnsafeMutablePointer<AtomicInt>) -> AtomicInt {
+      increment.memory = increment.memory + 1
+      return increment.memory
+  }
+
+  func AtomicDecrement(increment: UnsafeMutablePointer<AtomicInt>) -> AtomicInt {
+      increment.memory = increment.memory - 1
+      return increment.memory
+  }
+#else
+  let AtomicIncrement = OSAtomicIncrement32
+  let AtomicDecrement = OSAtomicDecrement32
+#endif
+
+class RunLoopLock {
     let currentRunLoop: CFRunLoopRef
 
-    override init() {
+    var calledRun: AtomicInt = 0
+    var calledStop: AtomicInt = 0
+
+    init() {
         currentRunLoop = CFRunLoopGetCurrent()
     }
 
@@ -34,6 +54,9 @@ class RunLoopLock : NSObject {
     }
 
     func stop() {
+        if AtomicIncrement(&calledStop) != 1 {
+            return
+        }
         CFRunLoopPerformBlock(currentRunLoop, kCFRunLoopDefaultMode) {
             CFRunLoopStop(self.currentRunLoop)
         }
@@ -41,6 +64,9 @@ class RunLoopLock : NSObject {
     }
 
     func run() {
+        if AtomicIncrement(&calledRun) != 1 {
+            fatalError("Run can be only called once")
+        }
         CFRunLoopRun()
     }
 }

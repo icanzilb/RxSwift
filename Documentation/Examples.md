@@ -5,11 +5,11 @@ Examples
 1. [Simple UI bindings](#simple-ui-bindings)
 1. [Autocomplete](#autocomplete)
 1. [more examples](../RxExample)
-1. [Playgrounds](../Rx.Playground)
+1. [Playgrounds](Playgrounds.md)
 
 ## Calculated variable
 
-Let's first start with some imperative swift code.
+Let's first start with some imperative swift code.Sw
 The purpose of example is to bind identifier `c` to a value calculated from `a` and `b` if some condition is satisfied.
 
 Here is the imperative swift code that calculates the value of `c`:
@@ -34,7 +34,7 @@ a = 4           // c will still be equal "3 is positive" which is not good
 
 This is not the wanted behavior.
 
-To integrate RxSwift framework into your project just include framework in your project and write `import RxSwit`.
+To integrate RxSwift framework into your project just include framework in your project and write `import RxSwift`.
 
 This is the same logic using RxSwift.
 
@@ -46,7 +46,9 @@ let b /*: Observable<Int>*/ = Variable(2)   // b = 2
 // if a + b >= 0 {
 //      c = "\(a + b) is positive"
 // }
-let c = combineLatest(a, b) { $0 + $1 }     // combines latest values of variables `a` and `b` using `+`
+
+// combines latest values of variables `a` and `b` using `+`
+let c = Observable.combineLatest(a.asObservable(), b.asObservable()) { $0 + $1 }
 	.filter { $0 >= 0 }               // if `a + b >= 0` is true, `a + b` is passed to map operator
 	.map { "\($0) is positive" }      // maps `a + b` to "\(a + b) is positive"
 
@@ -87,7 +89,7 @@ b.value = -8                                 // doesn't print anything
 
 ```swift
 let subscription/*: Disposable */ = primeTextField.rx_text      // type is Observable<String>
-            .map { WolframAlphaIsPrime($0.toInt() ?? 0) }       // type is Observable<Observable<Prime>>
+            .map { WolframAlphaIsPrime(Int($0) ?? 0) }       // type is Observable<Observable<Prime>>
             .concat()                                           // type is Observable<Prime>
             .map { "number \($0.n) is prime? \($0.isPrime)" }   // type is Observable<String>
             .bindTo(resultLabel.rx_text)                        // return Disposable that can be used to unbind everything
@@ -120,11 +122,11 @@ self.usernameOutlet.rx_text
     .map { username in
 
         // synchronous validation, nothing special here
-        if count(username) == 0 {
+        if username.isEmpty {
             // Convenience for constructing synchronous result.
             // In case there is mixed synchronous and asychronous code inside the same
             // method, this will construct an async result that is resolved immediatelly.
-            return just((valid: false, message: "Username can't be empty."))
+            return Observable.just((valid: false, message: "Username can't be empty."))
         }
 
         ...
@@ -136,7 +138,8 @@ self.usernameOutlet.rx_text
         //  * true  - is valid
         //  * false - not valid
         //  * nil   - validation pending
-        let loadingValue = (valid: nil, message: "Checking availability ...")
+        typealias LoadingInfo = (valid : String?, message: String?)
+        let loadingValue : LoadingInfo = (valid: nil, message: "Checking availability ...")
 
         // This will fire a server call to check if the username already exists.
         // Guess what, its type is `Observable<ValidationResult>`

@@ -1,3 +1,12 @@
+/*:
+> # IMPORTANT: To use `Rx.playground`, please:
+
+1. Open `Rx.xcworkspace`
+2. Build `RxSwift-OSX` scheme
+3. And then open `Rx` playground in `Rx.xcworkspace` tree view.
+4. Choose `View > Show Debug Area`
+*/
+
 //: [<< Previous](@previous) - [Index](Index)
 
 import RxSwift
@@ -65,8 +74,8 @@ This function will perform a function on each element in the sequence until it i
 
 */
 example("reduce") {
-    _ = sequenceOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-        .reduce(0, +)
+    _ = Observable.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+        .reduce(0, accumulator: +)
         .subscribe {
             print($0)
         }

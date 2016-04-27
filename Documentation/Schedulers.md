@@ -25,7 +25,7 @@ sequence1
   .map { n in
       print("This is performed on background scheduler")
   }
-  .observeOn(MainScheduler.sharedInstance)
+  .observeOn(MainScheduler.instance)
   .map { n in
       print("This is performed on main scheduler")
   }
@@ -67,8 +67,8 @@ If you want to create new scheduler that supports time based operations, then yo
 
 ```swift
 public protocol Scheduler: ImmediateScheduler {
-    typealias TimeInterval
-    typealias Time
+    associatedtype TimeInterval
+    associatedtype Time
 
     var now : Time {
         get

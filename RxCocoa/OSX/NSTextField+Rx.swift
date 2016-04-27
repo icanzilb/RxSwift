@@ -3,7 +3,7 @@
 //  RxCocoa
 //
 //  Created by Krunoslav Zaher on 5/17/15.
-//  Copyright (c) 2015 Krunoslav Zaher. All rights reserved.
+//  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
 import Foundation
@@ -102,23 +102,15 @@ extension NSTextField {
     public var rx_text: ControlProperty<String> {
         let delegate = proxyForObject(RxTextFieldDelegateProxy.self, self)
         
-        let source = deferred { [weak self] in
+        let source = Observable.deferred { [weak self] in
             delegate.textSubject.startWith(self?.stringValue ?? "")
         }.takeUntil(rx_deallocated)
-        
-        return ControlProperty(values: source, valueSink: AnyObserver { [weak self] event in
-            MainScheduler.ensureExecutingOnScheduler()
-            
-            switch event {
-            case .Next(let value):
-                self?.stringValue = value
-            case .Error(let error):
-                bindingErrorToInterface(error)
-                break
-            case .Completed:
-                break
-            }
-        })
+
+        let observer = UIBindingObserver(UIElement: self) { control, value in
+            control.stringValue = value
+        }
+
+        return ControlProperty(values: source, valueSink: observer.asObserver())
     }
     
 }

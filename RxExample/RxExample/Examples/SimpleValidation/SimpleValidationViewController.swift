@@ -1,5 +1,5 @@
 //
-//  SimpleValidation.swift
+//  SimpleValidationViewController.swift
 //  RxExample
 //
 //  Created by Krunoslav Zaher on 12/6/15.
@@ -30,7 +30,7 @@ class SimpleValidationViewController : ViewController {
         super.viewDidLoad()
 
         usernameValidOutlet.text = "Username has to be at least \(minimalUsernameLength) characters"
-        passwordValidOutlet.text = "Username has to be at least \(minimalPasswordLength) characters"
+        passwordValidOutlet.text = "Password has to be at least \(minimalPasswordLength) characters"
 
         let usernameValid = usernameOutlet.rx_text
             .map { $0.characters.count >= minimalUsernameLength }
@@ -40,7 +40,7 @@ class SimpleValidationViewController : ViewController {
             .map { $0.characters.count >= minimalPasswordLength }
             .shareReplay(1)
 
-        let everythingValid = combineLatest(usernameValid, passwordValid) { $0 && $1 }
+        let everythingValid = Observable.combineLatest(usernameValid, passwordValid) { $0 && $1 }
             .shareReplay(1)
 
         usernameValid
@@ -60,7 +60,7 @@ class SimpleValidationViewController : ViewController {
             .addDisposableTo(disposeBag)
 
         doSomethingOutlet.rx_tap
-            .subscribeNext(showAlert)
+            .subscribeNext { [weak self] in self?.showAlert() }
             .addDisposableTo(disposeBag)
     }
 

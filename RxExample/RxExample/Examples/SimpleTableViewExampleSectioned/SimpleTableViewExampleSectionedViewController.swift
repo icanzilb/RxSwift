@@ -25,7 +25,7 @@ class SimpleTableViewExampleSectionedViewController
 
         let dataSource = self.dataSource
 
-        let items = just([
+        let items = Observable.just([
             SectionModel(model: "First section", items: [
                     1.0,
                     2.0,
@@ -43,7 +43,7 @@ class SimpleTableViewExampleSectionedViewController
                 ])
             ])
 
-        dataSource.cellFactory = { (tv, indexPath, element) in
+        dataSource.configureCell = { (_, tv, indexPath, element) in
             let cell = tv.dequeueReusableCellWithIdentifier("Cell")!
             cell.textLabel?.text = "\(element) @ row \(indexPath.row)"
             return cell

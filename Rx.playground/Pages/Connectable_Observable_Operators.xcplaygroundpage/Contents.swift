@@ -1,6 +1,23 @@
+/*:
+> # IMPORTANT: To use `Rx.playground`, please:
+
+1. Open `Rx.xcworkspace`
+2. Build `RxSwift-OSX` scheme
+3. And then open `Rx` playground in `Rx.xcworkspace` tree view.
+4. Choose `View > Show Debug Area`
+*/
+
 //: [<< Previous](@previous) - [Index](Index)
 
 import RxSwift
+
+
+/*:
+ ## Below every example there is a commented method call that runs that example. To run the example just uncomment that part. 
+ 
+ E.g. `//sampleWithoutConnectableOperators()`
+*/
+
 
 /*:
 ## Connectable Observable Operators
@@ -12,7 +29,7 @@ Specialty Observables that have more precisely-controlled subscription dynamics.
 
 func sampleWithoutConnectableOperators() {
 
-    let int1 = interval(1, MainScheduler.sharedInstance)
+    let int1 = Observable<Int>.interval(1, scheduler: MainScheduler.instance)
 
     _ = int1
         .subscribe {
@@ -48,7 +65,7 @@ func sampleWithMulticast() {
             print("Subject \($0)")
         }
 
-    let int1 = interval(1, MainScheduler.sharedInstance)
+    let int1 = Observable<Int64>.interval(1, scheduler: MainScheduler.instance)
         .multicast(subject1)
 
     _ = int1
@@ -91,7 +108,7 @@ publish = multicast + replay subject
 */
 func sampleWithReplayBuffer0() {
 
-    let int1 = interval(1, MainScheduler.sharedInstance)
+    let int1 = Observable<Int>.interval(1, scheduler: MainScheduler.instance)
         .replay(0)
 
     _ = int1
@@ -126,7 +143,7 @@ func sampleWithReplayBuffer2() {
 
     print("--- sampleWithReplayBuffer2 ---\n")
 
-    let int1 = interval(1, MainScheduler.sharedInstance)
+    let int1 = Observable<Int>.interval(1, scheduler: MainScheduler.instance)
         .replay(2)
 
     _ = int1
@@ -169,7 +186,7 @@ so publish is basically replay(0)
 */
 func sampleWithPublish() {
 
-    let int1 = interval(1, MainScheduler.sharedInstance)
+    let int1 = Observable<Int>.interval(1, scheduler: MainScheduler.instance)
         .publish()
 
     _ = int1

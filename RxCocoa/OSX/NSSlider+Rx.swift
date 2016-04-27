@@ -1,9 +1,9 @@
 //
-//  NSControl+Rx.swift
+//  NSSlider+Rx.swift
 //  RxCocoa
 //
 //  Created by Junior B. on 24/05/15.
-//  Copyright (c) 2015 Krunoslav Zaher. All rights reserved.
+//  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
 import Foundation
@@ -18,11 +18,15 @@ extension NSSlider {
     Reactive wrapper for `value` property.
     */
     public var rx_value: ControlProperty<Double> {
-        return rx_value(getter: { [weak self] in
-            return self?.doubleValue ?? 0
-        }, setter: { [weak self] value in
-            self?.doubleValue = value
-        })
+        return NSControl.rx_value(
+            self,
+            getter: { control in
+                return control.doubleValue
+            },
+            setter: { control, value in
+                control.doubleValue = value
+            }
+        )
     }
     
 }

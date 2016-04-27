@@ -1,3 +1,12 @@
+/*:
+> # IMPORTANT: To use `Rx.playground`, please:
+
+1. Open `Rx.xcworkspace`
+2. Build `RxSwift-OSX` scheme
+3. And then open `Rx` playground in `Rx.xcworkspace` tree view.
+4. Choose `View > Show Debug Area`
+*/
+
 //: [<< Index](@previous)
 
 import RxSwift
@@ -25,7 +34,7 @@ Creating an Observable is one thing, but if nothing subscribes to the observable
 */
 
 example("empty") {
-    let emptySequence: Observable<Int> = empty()
+    let emptySequence = Observable<Int>.empty()
 
     let subscription = emptySequence
         .subscribe { event in
@@ -40,7 +49,7 @@ example("empty") {
 */
 
 example("never") {
-    let neverSequence: Observable<String> = never()
+    let neverSequence = Observable<Int>.never()
 
     let subscription = neverSequence
         .subscribe { _ in
@@ -54,7 +63,7 @@ example("never") {
 */
 
 example("just") {
-    let singleElementSequence = just(32)
+    let singleElementSequence = Observable.just(32)
 
     let subscription = singleElementSequence
         .subscribe { event in
@@ -68,7 +77,7 @@ example("just") {
 */
 
 example("sequenceOf") {
-    let sequenceOfElements/* : Observable<Int> */ = sequenceOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+    let sequenceOfElements/* : Observable<Int> */ = Observable.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
     
     let subscription = sequenceOfElements
         .subscribe { event in
@@ -77,8 +86,8 @@ example("sequenceOf") {
 }
 
 /*:
-### from
-`from` creates a sequence from `SequenceType`
+### toObservable
+`toObservable` creates a sequence out of an array.
 */
 
 example("toObservable") {
@@ -97,7 +106,7 @@ example("toObservable") {
 
 example("create") {
     let myJust = { (singleElement: Int) -> Observable<Int> in
-        return create { observer in
+        return Observable.create { observer in
             observer.on(.Next(singleElement))
             observer.on(.Completed)
             
@@ -112,14 +121,32 @@ example("create") {
 }
 
 /*:
-### failWith
+### generate
+`generate` creates sequence that generates its values and determines when to terminate based on its previous values.
+*/
+
+example("generate") {
+    let generated = Observable.generate(
+        initialState: 0,
+        condition: { $0 < 3 },
+        iterate: { $0 + 1 }
+    )
+
+    let subscription = generated
+        .subscribe { event in
+            print(event)
+        }
+}
+
+/*:
+### error
 create an Observable that emits no items and terminates with an error
 */
 
-example("failWith") {
+example("error") {
     let error = NSError(domain: "Test", code: -1, userInfo: nil)
     
-    let erroredSequence: Observable<Int> = failWith(error)
+    let erroredSequence = Observable<Int>.error(error)
     
     let subscription = erroredSequence
         .subscribe { event in
@@ -137,9 +164,9 @@ do not create the Observable until the observer subscribes, and create a fresh O
 [More info in reactive.io website]( http://reactivex.io/documentation/operators/defer.html )
 */
 example("deferred") {
-    let deferredSequence: Observable<Int> = deferred {
+    let deferredSequence: Observable<Int> = Observable.deferred {
         print("creating")
-        return create { observer in
+        return Observable.create { observer in
             print("emmiting")
             observer.on(.Next(0))
             observer.on(.Next(1))

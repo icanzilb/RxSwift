@@ -1,9 +1,9 @@
 //
-//  ViewController.swift
+//  WikipediaSearchViewController.swift
 //  Example
 //
 //  Created by Krunoslav Zaher on 2/21/15.
-//  Copyright (c) 2015 Krunoslav Zaher. All rights reserved.
+//  Copyright © 2015 Krunoslav Zaher. All rights reserved.
 //
 
 import UIKit
@@ -13,13 +13,20 @@ import RxCocoa
 #endif
 
 class WikipediaSearchViewController: ViewController {
+    @IBOutlet var searchBarContainer: UIView!
+    
+    private let searchController = UISearchController(searchResultsController: UITableViewController())
+    
+    private var resultsViewController: UITableViewController {
+        return (self.searchController.searchResultsController as? UITableViewController)!
+    }
     
     private var resultsTableView: UITableView {
-        return self.searchDisplayController!.searchResultsTableView
+        return self.resultsViewController.tableView!
     }
 
     private var searchBar: UISearchBar {
-        return self.searchDisplayController!.searchBar
+        return self.searchController.searchBar
     }
 
     override func awakeFromNib() {
@@ -31,6 +38,15 @@ class WikipediaSearchViewController: ViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        let searchBar = self.searchBar
+        let searchBarContainer = self.searchBarContainer
+
+        searchBarContainer.addSubview(searchBar)
+        searchBar.frame = searchBarContainer.bounds
+        searchBar.autoresizingMask = .FlexibleWidth
+
+        resultsViewController.edgesForExtendedLayout = UIRectEdge.None
+
         configureTableDataSource()
         configureKeyboardDismissesOnScroll()
         configureNavigateOnRowClick()
@@ -42,24 +58,27 @@ class WikipediaSearchViewController: ViewController {
         
         resultsTableView.rowHeight = 194
 
+        // This is for clarity only, don't use static dependencies
         let API = DefaultWikipediaAPI.sharedAPI
-        let scheduler = MainScheduler.sharedInstance
+
+        resultsTableView.delegate = nil
+        resultsTableView.dataSource = nil
 
         searchBar.rx_text
             .asDriver()
-            .throttle(0.3, scheduler)
+            .throttle(0.3)
             .distinctUntilChanged()
             .flatMapLatest { query in
                 API.getSearchResults(query)
                     .retry(3)
-                    .retryOnBecomesReachable([], reachabilityService: ReachabilityService.sharedReachabilityService)
+                    .retryOnBecomesReachable([], reachabilityService: Dependencies.sharedDependencies.reachabilityService)
                     .startWith([]) // clears results on new search term
                     .asDriver(onErrorJustReturn: [])
             }
             .map { results in
                 results.map(SearchResultViewModel.init)
             }
-            .drive(resultsTableView.rx_itemsWithCellIdentifier("WikipediaSearchCell")) { (_, viewModel, cell: WikipediaSearchCell) in
+            .drive(resultsTableView.rx_itemsWithCellIdentifier("WikipediaSearchCell", cellType: WikipediaSearchCell.self)) { (_, viewModel, cell) in
                 cell.viewModel = viewModel
             }
             .addDisposableTo(disposeBag)
@@ -67,9 +86,13 @@ class WikipediaSearchViewController: ViewController {
 
     func configureKeyboardDismissesOnScroll() {
         let searchBar = self.searchBar
-
+        let searchController = self.searchController
+        
         resultsTableView.rx_contentOffset
             .asDriver()
+            .filter { _ -> Bool in
+                return !searchController.isBeingPresented()
+            }
             .driveNext { _ in
                 if searchBar.isFirstResponder() {
                     _ = searchBar.resignFirstResponder()
@@ -90,14 +113,12 @@ class WikipediaSearchViewController: ViewController {
     }
 
     func configureActivityIndicatorsShow() {
-        combineLatest(
+        Driver.combineLatest(
             DefaultWikipediaAPI.sharedAPI.loadingWikipediaData,
             DefaultImageService.sharedImageService.loadingImage
         ) { $0 || $1 }
             .distinctUntilChanged()
-            .driveNext { active in
-                UIApplication.sharedApplication().networkActivityIndicatorVisible = active
-            }
+            .drive(UIApplication.sharedApplication().rx_networkActivityIndicatorVisible)
             .addDisposableTo(disposeBag)
     }
 }
